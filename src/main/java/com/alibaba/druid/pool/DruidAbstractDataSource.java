@@ -745,12 +745,12 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter
             return timeBetweenConnectErrorMillis;
         }
         //不能被整除，返回最小重试间隔
-        int retry = errorCount % 4;
+        int retry = errorCount % 3;
         if (retry != 0) {
             return timeBetweenConnectErrorMillis;
         }
         // 可以被整除，获取倍数
-        retry = (errorCount - 1) / 4;
+        retry = (errorCount - 1) / 3;
         retry = Math.min(1, retry);
         // 倍数为0，为第一轮重试，采用30间隔，倍数为1，为第2轮重试，采用10分钟间隔，
         int[] retryTime = {30000, 600000};
