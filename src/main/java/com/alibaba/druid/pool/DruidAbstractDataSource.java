@@ -91,7 +91,7 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter
     public final static boolean DEFAULT_TEST_ON_RETURN = false;
     public final static boolean DEFAULT_WHILE_IDLE = true;
     public static final long DEFAULT_TIME_BETWEEN_EVICTION_RUNS_MILLIS = 60 * 1000L;
-    public static final long DEFAULT_TIME_BETWEEN_CONNECT_ERROR_MILLIS = 500;
+    public static final long DEFAULT_TIME_BETWEEN_CONNECT_ERROR_MILLIS = 5000;
     public static final long DEFAULT_MAX_TIME_BETWEEN_CONNECT_ERROR_MILLIS = 1000L * 60L * 3;
     public static final int DEFAULT_NUM_TESTS_PER_EVICTION_RUN = 3;
 
@@ -740,19 +740,21 @@ public abstract class DruidAbstractDataSource extends WrapperAdapter
     }
 
     public long getDynamicTimeBetweenConnectErrorMillis(int errorCount) {
-        if (errorCount == 0) {
-            return DEFAULT_TIME_BETWEEN_CONNECT_ERROR_MILLIS;
+        // 异常输入，返回最小重试间隔
+        if (errorCount <= 0) {
+            return timeBetweenConnectErrorMillis;
         }
-        int number = (int)(Math.random() * 10);
-        if (errorCount > 10) {
-            return DEFAULT_MAX_TIME_BETWEEN_CONNECT_ERROR_MILLIS + number * DEFAULT_TIME_BETWEEN_CONNECT_ERROR_MILLIS;
+        //不能被整除，返回最小重试间隔
+        int retry = errorCount % 4;
+        if (retry != 0) {
+            return timeBetweenConnectErrorMillis;
         }
-        double multiple = Math.pow(2, errorCount);
-        long temp = DEFAULT_TIME_BETWEEN_CONNECT_ERROR_MILLIS * (long)multiple
-            + number * DEFAULT_TIME_BETWEEN_CONNECT_ERROR_MILLIS;
-        timeBetweenConnectErrorMillis = Math.min(DEFAULT_MAX_TIME_BETWEEN_CONNECT_ERROR_MILLIS, temp);
-
-        return timeBetweenConnectErrorMillis;
+        // 可以被整除，获取倍数
+        retry = (errorCount - 1) / 4;
+        retry = Math.min(1, retry);
+        // 倍数为0，为第一轮重试，采用30间隔，倍数为1，为第2轮重试，采用10分钟间隔，
+        int[] retryTime = {30000, 600000};
+        return retryTime[retry];
     }
 
     public int getMaxOpenPreparedStatements() {

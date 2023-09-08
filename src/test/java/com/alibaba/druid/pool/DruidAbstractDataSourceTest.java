@@ -25,8 +25,15 @@ public class DruidAbstractDataSourceTest extends TestCase {
     }
     public void testGetDynamicTimeBetweenConnectErrorMillis() {
 
-        for (int errorCount = 1500000; errorCount < 1500010; errorCount++) {
+        for (int errorCount = -5; errorCount < 20; errorCount++) {
            long time= dataSource.getDynamicTimeBetweenConnectErrorMillis(errorCount);
+            System.out.println("errorCount : "+ errorCount+" ,TimeBetweenConnectErrorMillis : " + time);
+        }
+    }
+    public void testGetDynamicTimeBetweenConnectErrorMillis2() {
+
+        for (int errorCount = 1000000; errorCount < 1000020; errorCount++) {
+            long time= dataSource.getDynamicTimeBetweenConnectErrorMillis(errorCount);
             System.out.println("errorCount : "+ errorCount+" ,TimeBetweenConnectErrorMillis : " + time);
         }
     }
